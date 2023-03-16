@@ -1,0 +1,40 @@
+version: '3.4'
+
+networks:
+  democrud:
+
+services:
+  demoappdb:
+    container_name: app-db
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    hostname: demoappdb
+    restart: unless-stopped
+
+    ports:
+     - 8002:1433
+    
+    environment:
+       - ACCEPT_EULA=Y
+       - MSSQL_SA_PASSWORD=password@12345#
+       
+    networks:
+     - democrud
+  democrud:
+    container_name: demo_crud
+    image: ${DOCKER_REGISTRY-}democrud
+    
+    build:
+      context: .
+      dockerfile: demoCRUD/Dockerfile
+    ports:
+      - 8001:80
+      - 8004:443  
+    depends_on:
+      - demoappdb
+    environment:
+     - DB-Host=demoappdb
+     - DB-Name=DemoCRUDDB
+     - DB_MSSQL_SA_PASSWORD=password@12345#
+     - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+     - democrud
